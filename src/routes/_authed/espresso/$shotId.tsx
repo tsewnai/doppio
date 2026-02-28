@@ -9,7 +9,8 @@ import { PageHeader } from "~/components/layout/PageHeader";
 import { RatioDisplay } from "~/components/brew/RatioDisplay";
 import { RatingInput } from "~/components/brew/RatingInput";
 import { getShot, updateShot, deleteShot } from "~/server/functions/shots";
-import { formatBrewDate, formatTime } from "~/lib/utils";
+import { formatBrewDate, formatTemp, formatTime, toC, toF } from "~/lib/utils";
+import { useTempUnit } from "~/hooks/useTempUnit";
 
 export const Route = createFileRoute("/_authed/espresso/$shotId")({
   loader: async ({ params }) => {
@@ -23,15 +24,20 @@ export const Route = createFileRoute("/_authed/espresso/$shotId")({
 function ShotDetailPage() {
   const shot = Route.useLoaderData();
   const router = useRouter();
+  const { unit } = useTempUnit();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  // Edit state mirrors the shot fields
+  // Edit state mirrors the shot fields; waterTemp is stored in the user's display unit
   const [dose, setDose] = useState(String(shot.actualDoseG));
   const [yield_, setYield] = useState(String(shot.actualYieldG));
   const [extractionSec, setExtractionSec] = useState(String(shot.extractionTimeSec));
-  const [waterTemp, setWaterTemp] = useState(String(shot.waterTempC ?? ""));
+  const [waterTemp, setWaterTemp] = useState(
+    shot.waterTempC != null
+      ? String(unit === "F" ? toF(shot.waterTempC) : shot.waterTempC)
+      : ""
+  );
   const [grind, setGrind] = useState(shot.grindSetting ?? "");
   const [pressure, setPressure] = useState(String(shot.pressureBar ?? ""));
   const [rating, setRating] = useState(shot.rating ?? 0);
@@ -46,7 +52,9 @@ function ShotDetailPage() {
           actualDoseG: parseFloat(dose),
           actualYieldG: parseFloat(yield_),
           extractionTimeSec: parseInt(extractionSec, 10),
-          waterTempC: waterTemp ? parseFloat(waterTemp) : undefined,
+          waterTempC: waterTemp
+            ? unit === "F" ? toC(parseFloat(waterTemp)) : parseFloat(waterTemp)
+            : undefined,
           grindSetting: grind || undefined,
           pressureBar: pressure ? parseFloat(pressure) : undefined,
           rating: rating || undefined,
@@ -102,7 +110,7 @@ function ShotDetailPage() {
           <Card>
             <CardContent className="pt-4 grid grid-cols-2 gap-3">
               <Stat label="Extraction" value={formatTime(shot.extractionTimeSec)} />
-              <Stat label="Water Temp" value={shot.waterTempC ? `${shot.waterTempC}°C` : "—"} />
+              <Stat label="Water Temp" value={shot.waterTempC ? formatTemp(shot.waterTempC, unit) : "—"} />
               <Stat label="Grind" value={shot.grindSetting ?? "—"} />
               <Stat label="Pressure" value={shot.pressureBar ? `${shot.pressureBar} bar` : "—"} />
             </CardContent>
@@ -201,7 +209,7 @@ function ShotDetailPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="temp">Water Temp (°C)</Label>
+                <Label htmlFor="temp">Water Temp (°{unit})</Label>
                 <Input
                   id="temp"
                   type="number"

@@ -38,6 +38,24 @@ export function formatBrewDate(dateStr: string): string {
   });
 }
 
+/** Temperature unit type */
+export type TempUnit = "C" | "F";
+
+/** Convert Celsius → Fahrenheit, rounded to 1 decimal */
+export function toF(c: number): number {
+  return Math.round((c * 9 / 5 + 32) * 10) / 10;
+}
+
+/** Convert Fahrenheit → Celsius, rounded to 1 decimal */
+export function toC(f: number): number {
+  return Math.round(((f - 32) * 5 / 9) * 10) / 10;
+}
+
+/** Display a Celsius DB value in the user's preferred unit */
+export function formatTemp(tempC: number, unit: TempUnit): string {
+  return unit === "F" ? `${toF(tempC)}°F` : `${tempC}°C`;
+}
+
 /** Brew method display labels */
 export const BREW_METHOD_LABELS: Record<string, string> = {
   espresso: "Espresso",

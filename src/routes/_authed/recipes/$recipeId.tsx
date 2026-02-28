@@ -7,7 +7,8 @@ import { Card, CardContent } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import { PageHeader } from "~/components/layout/PageHeader";
 import { getRecipe, updateRecipe, deleteRecipe } from "~/server/functions/recipes";
-import { BREW_METHOD_LABELS } from "~/lib/utils";
+import { BREW_METHOD_LABELS, formatTemp, toC, toF } from "~/lib/utils";
+import { useTempUnit } from "~/hooks/useTempUnit";
 import { BREW_METHODS } from "~/db/schema";
 import {
   Select,
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/_authed/recipes/$recipeId")({
 function RecipeDetailPage() {
   const recipe = Route.useLoaderData();
   const router = useRouter();
+  const { unit } = useTempUnit();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -37,7 +39,11 @@ function RecipeDetailPage() {
   const [method, setMethod] = useState<typeof BREW_METHODS[number]>(recipe.brewMethod);
   const [dose, setDose] = useState(String(recipe.targetDoseG ?? ""));
   const [yield_, setYield] = useState(String(recipe.targetYieldG ?? ""));
-  const [temp, setTemp] = useState(String(recipe.waterTempC ?? ""));
+  const [temp, setTemp] = useState(
+    recipe.waterTempC != null
+      ? String(unit === "F" ? toF(recipe.waterTempC) : recipe.waterTempC)
+      : ""
+  );
   const [grind, setGrind] = useState(recipe.grindSetting ?? "");
   const [notes, setNotes] = useState(recipe.notes ?? "");
 
@@ -51,7 +57,9 @@ function RecipeDetailPage() {
           brewMethod: method,
           targetDoseG: dose ? parseFloat(dose) : undefined,
           targetYieldG: yield_ ? parseFloat(yield_) : undefined,
-          waterTempC: temp ? parseFloat(temp) : undefined,
+          waterTempC: temp
+            ? unit === "F" ? toC(parseFloat(temp)) : parseFloat(temp)
+            : undefined,
           grindSetting: grind || undefined,
           notes: notes || undefined,
         },
@@ -95,7 +103,7 @@ function RecipeDetailPage() {
               <Stat label="Target Dose" value={recipe.targetDoseG ? `${recipe.targetDoseG}g` : "—"} />
               <Stat label="Target Yield" value={recipe.targetYieldG ? `${recipe.targetYieldG}g` : "—"} />
               <Stat label="Ratio" value={recipe.ratio ? `1:${recipe.ratio.toFixed(1)}` : "—"} />
-              <Stat label="Water Temp" value={recipe.waterTempC ? `${recipe.waterTempC}°C` : "—"} />
+              <Stat label="Water Temp" value={recipe.waterTempC ? formatTemp(recipe.waterTempC, unit) : "—"} />
               <Stat label="Grind Setting" value={recipe.grindSetting ?? "—"} />
             </CardContent>
           </Card>
@@ -191,7 +199,7 @@ function RecipeDetailPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="temp">Water Temp (°C)</Label>
+                <Label htmlFor="temp">Water Temp (°{unit})</Label>
                 <Input
                   id="temp"
                   type="number"

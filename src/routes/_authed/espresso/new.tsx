@@ -10,6 +10,8 @@ import { RatioDisplay } from "~/components/brew/RatioDisplay";
 import { RatingInput } from "~/components/brew/RatingInput";
 import { createShot } from "~/server/functions/shots";
 import { listRecipes } from "~/server/functions/recipes";
+import { toC, toF } from "~/lib/utils";
+import { useTempUnit } from "~/hooks/useTempUnit";
 import {
   Select,
   SelectContent,
@@ -26,6 +28,7 @@ export const Route = createFileRoute("/_authed/espresso/new")({
 function NewShotPage() {
   const recipes = Route.useLoaderData();
   const router = useRouter();
+  const { unit } = useTempUnit();
 
   const [selectedRecipeId, setSelectedRecipeId] = useState<string>("");
   const [dose, setDose] = useState("");
@@ -46,7 +49,8 @@ function NewShotPage() {
     if (recipe) {
       if (recipe.targetDoseG) setDose(String(recipe.targetDoseG));
       if (recipe.targetYieldG) setYield(String(recipe.targetYieldG));
-      if (recipe.waterTempC) setWaterTemp(String(recipe.waterTempC));
+      if (recipe.waterTempC)
+        setWaterTemp(String(unit === "F" ? toF(recipe.waterTempC) : recipe.waterTempC));
       if (recipe.grindSetting) setGrind(recipe.grindSetting);
     }
   }
@@ -72,7 +76,9 @@ function NewShotPage() {
           actualDoseG: doseNum,
           actualYieldG: yieldNum,
           extractionTimeSec: extractionSec,
-          waterTempC: waterTemp ? parseFloat(waterTemp) : undefined,
+          waterTempC: waterTemp
+            ? unit === "F" ? toC(parseFloat(waterTemp)) : parseFloat(waterTemp)
+            : undefined,
           grindSetting: grind || undefined,
           pressureBar: pressure ? parseFloat(pressure) : undefined,
           rating: rating || undefined,
@@ -174,14 +180,14 @@ function NewShotPage() {
           <CardContent className="pt-4 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="temp">Water Temp (°C)</Label>
+                <Label htmlFor="temp">Water Temp (°{unit})</Label>
                 <Input
                   id="temp"
                   type="number"
                   step="0.5"
                   min="0"
-                  max="105"
-                  placeholder="93"
+                  max={unit === "F" ? "221" : "105"}
+                  placeholder={unit === "F" ? "199" : "93"}
                   value={waterTemp}
                   onChange={(e) => setWaterTemp(e.target.value)}
                   inputMode="decimal"

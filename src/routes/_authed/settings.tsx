@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "~/com
 import { Separator } from "~/components/ui/separator";
 import { PageHeader } from "~/components/layout/PageHeader";
 import { signOut } from "~/lib/auth-client";
+import { useTempUnit } from "~/hooks/useTempUnit";
 
 export const Route = createFileRoute("/_authed/settings")({
   component: SettingsPage,
@@ -14,6 +15,7 @@ function SettingsPage() {
   const { user } = Route.useRouteContext();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
+  const { unit, toggle } = useTempUnit();
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -40,6 +42,47 @@ function SettingsPage() {
             <div>
               <p className="text-xs text-muted-foreground">Email</p>
               <p className="font-medium">{user.email}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Preferences */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Preferences</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Water temperature</p>
+                <p className="text-xs text-muted-foreground">
+                  Currently showing °{unit}
+                </p>
+              </div>
+              <div className="flex rounded-lg border overflow-hidden text-sm font-medium">
+                <button
+                  type="button"
+                  onClick={() => unit === "F" && toggle()}
+                  className={`px-3 py-1.5 transition-colors ${
+                    unit === "C"
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-muted"
+                  }`}
+                >
+                  °C
+                </button>
+                <button
+                  type="button"
+                  onClick={() => unit === "C" && toggle()}
+                  className={`px-3 py-1.5 transition-colors ${
+                    unit === "F"
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-muted"
+                  }`}
+                >
+                  °F
+                </button>
+              </div>
             </div>
           </CardContent>
         </Card>
