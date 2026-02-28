@@ -57,6 +57,12 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 function RootComponent() {
   const { session } = Route.useRouteContext();
 
+  React.useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+  }, []);
+
   return (
     <html lang="en">
       <head>
