@@ -2,10 +2,13 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { db } from "~/db/client";
+import { user, session, account, verification } from "~/db/schema";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "sqlite",
+    // Pass the Better Auth tables explicitly so the adapter can find them
+    schema: { user, session, account, verification },
   }),
   emailAndPassword: {
     enabled: true,
