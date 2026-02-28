@@ -1,0 +1,10 @@
+node_modules/
+.output/
+dist/
+.env
+*.local.db
+*.local.db-journal
+local.db
+local.db-journal
+.turso/
+.tanstack/
